@@ -6,9 +6,10 @@ Trabajo realizado por:
 * Adrián Epifanio Rodríguez Hernández.
 
 A continunación se encuentran los enlaces correspondientes a:
+* [Requisitos](./Requisitos.pdf).
 * [Modelo Conceptual (ER/E)](./Modelo%20Conceptual%20ER-E/ERE.pdf).
-* [Modelo Lógico Relacional](./Modelo/%20Logico/%20Relacional/GrafoRelacional.pdf).
+* [Modelo Lógico Relacional](./Modelo%20Logico%20Relacional/GrafoRelacional.pdf).
 * [Modelo Lógico Objeto-Relacional (UML)](./Modelo%20Logico%20Objeto-Relacional-UML/ASIClases.pdf).
 * [Generación de Código (Scripts)](./Scripts/ScriptCreacion.pdf).
 * [Carga de datos](./Scripts/CSI8.pdf).
-* [Script Postfres](./Scripts/ScriptPostgres.sql).
+* [Script Postgres](./Scripts/ScriptPostgres.sql).
