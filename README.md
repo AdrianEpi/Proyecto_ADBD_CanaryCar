@@ -1,4 +1,4 @@
-# Proyecto_ADBD_CanaryCar
+# Proyecto CanaryCar
 Respositorio para el proyecto final de asignatura de la Administración y diseño de bases de datos.
 
 El proyecto consiste en crear la base de datos de empresa dedicada al alquiler de coches en Canarias.
