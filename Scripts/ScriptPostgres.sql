@@ -97,7 +97,7 @@ CREATE TABLE IF NOT EXISTS Coche (
   NumAparcamiento INT NOT NULL,
   Precio DECIMAL NOT NULL,
   Sucursal_Tiene_Sucursal_ID INT NOT NULL,
-  PRIMARY KEY (Matricula, Sucursal_Tiene_Sucursal_ID),
+  PRIMARY KEY (Matricula),
   CONSTRAINT fk_Coche_Sucursal_Tiene1
     FOREIGN KEY (Sucursal_Tiene_Sucursal_ID)
     REFERENCES Sucursal_Tiene (Sucursal_ID)
@@ -128,13 +128,12 @@ CREATE TABLE IF NOT EXISTS Reserva (
   FechaInicio DATE NOT NULL,
   FechaFin DATE NOT NULL,
   Coche_Matricula VARCHAR(45) NOT NULL,
-  Coche_Sucursal_Tiene_Sucursal_ID INT NOT NULL,
   Empleado_DNI VARCHAR(9) NOT NULL,
   Cliente_LicenciaConducir VARCHAR(45) NOT NULL,
-  PRIMARY KEY (Coche_Matricula, Coche_Sucursal_Tiene_Sucursal_ID, Empleado_DNI, Cliente_LicenciaConducir),
+  PRIMARY KEY (FechaInicio, Cliente_LicenciaConducir),
   CONSTRAINT fk_Reserva_Coche1
-    FOREIGN KEY (Coche_Matricula , Coche_Sucursal_Tiene_Sucursal_ID)
-    REFERENCES Coche (Matricula , Sucursal_Tiene_Sucursal_ID)
+    FOREIGN KEY (Coche_Matricula)
+    REFERENCES Coche (Matricula)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
   CONSTRAINT fk_Reserva_Empleado1
@@ -156,7 +155,8 @@ CREATE TABLE IF NOT EXISTS Reserva (
 CREATE TABLE IF NOT EXISTS Empleado_Trabaja_Sucursal (
   Sucursal_ID INT NOT NULL,
   Empleado_DNI VARCHAR(9) NOT NULL,
-  PRIMARY KEY (Sucursal_ID, Empleado_DNI),
+  Fecha DATE NOT NULL,
+  PRIMARY KEY (Sucursal_ID, Empleado_DNI, Fecha),
   CONSTRAINT fk_Empleado_Trabaja_Sucursal_Sucursal
     FOREIGN KEY (Sucursal_ID)
     REFERENCES Sucursal (ID)
@@ -176,7 +176,7 @@ CREATE TABLE IF NOT EXISTS Empleado_Trabaja_Sucursal (
 CREATE TABLE IF NOT EXISTS Sucursal_Contrata_EmpresaExterna (
   Sucursal_ID INT NOT NULL,
   Empresa_Externa_CIF VARCHAR(45) NOT NULL,
-  Coste VARCHAR(45) NOT NULL,
+  Coste DECIMAL NOT NULL,
   FechaInicio VARCHAR(45) NOT NULL,
   FechaFin VARCHAR(45) NOT NULL,
   InformacionContrato VARCHAR(45) NULL,
@@ -195,11 +195,11 @@ CREATE TABLE IF NOT EXISTS Sucursal_Contrata_EmpresaExterna (
 -- -----------------------------------------------------
 -- Table Nacional
 -- -----------------------------------------------------
-#DROP TABLE IF EXISTS Nacional ;
+-- DROP TABLE IF EXISTS Nacional ;
 CREATE TABLE IF NOT EXISTS Nacional (
   DNI VARCHAR(45) NOT NULL,
   Cliente_LicenciaConducir VARCHAR(45) NOT NULL,
-  PRIMARY KEY (DNI, Cliente_LicenciaConducir),
+  PRIMARY KEY (Cliente_LicenciaConducir),
   CONSTRAINT fk_Nacional_Cliente1
     FOREIGN KEY (Cliente_LicenciaConducir)
     REFERENCES Cliente (LicenciaConducir)
@@ -210,11 +210,11 @@ CREATE TABLE IF NOT EXISTS Nacional (
 -- -----------------------------------------------------
 -- Table Extranjero
 -- -----------------------------------------------------
-#DROP TABLE IF EXISTS Extranjero ;
+-- DROP TABLE IF EXISTS Extranjero ;
 CREATE TABLE IF NOT EXISTS Extranjero (
   Pasaporte VARCHAR(45) NOT NULL,
   Cliente_LicenciaConducir VARCHAR(45) NOT NULL,
-  PRIMARY KEY (Pasaporte, Cliente_LicenciaConducir),
+  PRIMARY KEY (Cliente_LicenciaConducir),
   CONSTRAINT fk_Extranjero_Cliente1
     FOREIGN KEY (Cliente_LicenciaConducir)
     REFERENCES Cliente (LicenciaConducir)
@@ -325,9 +325,10 @@ CREATE TRIGGER Reserva_AFTER_INSERT
 -- -----------------------------------------------------
 -- DROP FUNCTION IF EXISTS reservaUpdate;
 CREATE OR REPLACE FUNCTION reservaUpdate() RETURNS TRIGGER AS $reservaUpdate$
-DECLARE nuevoPrecio DECIMAL;
+DECLARE idSucursal INTEGER;
 BEGIN
-  CALL actualizaBeneficio(NEW.Coche_Sucursal_Tiene_Sucursal_ID, NEW.Precio);
+  idSucursal = (SELECT Sucursal_Tiene_Sucursal_ID FROM Coche WHERE (Matricula = New.Coche_Matricula))::INTEGER;
+  CALL actualizaBeneficio(idSucursal, NEW.Precio);
   RETURN NEW;
 END;
 $reservaUpdate$ LANGUAGE plpgsql;
@@ -424,25 +425,25 @@ INSERT INTO Cliente (Telefono, Nombre, Email, FechaNacimiento, LicenciaConducir)
 -- -----------------------------------------------------
 -- Data for table Reserva
 -- -----------------------------------------------------
-INSERT INTO Reserva (ID, Precio, FechaInicio, FechaFin, Coche_Matricula, Coche_Sucursal_Tiene_Sucursal_ID, Empleado_DNI, Cliente_LicenciaConducir) VALUES (1, NULL, '2021-12-18 13:14:17', '2021-12-31 13:14:17', '3', 2, '12345678C', 'D');
-INSERT INTO Reserva (ID, Precio, FechaInicio, FechaFin, Coche_Matricula, Coche_Sucursal_Tiene_Sucursal_ID, Empleado_DNI, Cliente_LicenciaConducir) VALUES (2, NULL, '2021-01-17 13:14:17', '2021-11-21 13:14:17', '12', 1, '12345678B', 'E');
-INSERT INTO Reserva (ID, Precio, FechaInicio, FechaFin, Coche_Matricula, Coche_Sucursal_Tiene_Sucursal_ID, Empleado_DNI, Cliente_LicenciaConducir) VALUES (3, NULL, '2021-01-18 13:14:17', '2021-02-18 13:14:17', '11', 1, '12345678B', 'B');
-INSERT INTO Reserva (ID, Precio, FechaInicio, FechaFin, Coche_Matricula, Coche_Sucursal_Tiene_Sucursal_ID, Empleado_DNI, Cliente_LicenciaConducir) VALUES (4, NULL, '2021-04-18 13:14:17', '2021-04-26 13:14:17', '2', 3, '12345678A', 'A');
-INSERT INTO Reserva (ID, Precio, FechaInicio, FechaFin, Coche_Matricula, Coche_Sucursal_Tiene_Sucursal_ID, Empleado_DNI, Cliente_LicenciaConducir) VALUES (5, NULL, '2021-02-18 13:14:17', '2021-02-28 13:14:17', '2', 3, '12345678A', 'C');
+INSERT INTO Reserva (ID, Precio, FechaInicio, FechaFin, Coche_Matricula, Empleado_DNI, Cliente_LicenciaConducir) VALUES (1, NULL, '2021-12-18 13:14:17', '2021-12-31 13:14:17', '3', '12345678C', 'D');
+INSERT INTO Reserva (ID, Precio, FechaInicio, FechaFin, Coche_Matricula, Empleado_DNI, Cliente_LicenciaConducir) VALUES (2, NULL, '2021-01-17 13:14:17', '2021-11-21 13:14:17', '12', '12345678B', 'E');
+INSERT INTO Reserva (ID, Precio, FechaInicio, FechaFin, Coche_Matricula, Empleado_DNI, Cliente_LicenciaConducir) VALUES (3, NULL, '2021-01-18 13:14:17', '2021-02-18 13:14:17', '11', '12345678B', 'B');
+INSERT INTO Reserva (ID, Precio, FechaInicio, FechaFin, Coche_Matricula, Empleado_DNI, Cliente_LicenciaConducir) VALUES (4, NULL, '2021-04-18 13:14:17', '2021-04-26 13:14:17', '2', '12345678A', 'A');
+INSERT INTO Reserva (ID, Precio, FechaInicio, FechaFin, Coche_Matricula, Empleado_DNI, Cliente_LicenciaConducir) VALUES (5, NULL, '2021-02-18 13:14:17', '2021-02-28 13:14:17', '2', '12345678A', 'C');
 
 
 -- -----------------------------------------------------
 -- Data for table Empleado_Trabaja_Sucursal
 -- -----------------------------------------------------
-INSERT INTO Empleado_Trabaja_Sucursal (Sucursal_ID, Empleado_DNI) VALUES (1, '12345678B');
-INSERT INTO Empleado_Trabaja_Sucursal (Sucursal_ID, Empleado_DNI) VALUES (2, '12345678C');
-INSERT INTO Empleado_Trabaja_Sucursal (Sucursal_ID, Empleado_DNI) VALUES (3, '12345678A');
-INSERT INTO Empleado_Trabaja_Sucursal (Sucursal_ID, Empleado_DNI) VALUES (4, '12345678H');
-INSERT INTO Empleado_Trabaja_Sucursal (Sucursal_ID, Empleado_DNI) VALUES (5, '12345678E');
-INSERT INTO Empleado_Trabaja_Sucursal (Sucursal_ID, Empleado_DNI) VALUES (6, '12345678F');
-INSERT INTO Empleado_Trabaja_Sucursal (Sucursal_ID, Empleado_DNI) VALUES (7, '12345678I');
-INSERT INTO Empleado_Trabaja_Sucursal (Sucursal_ID, Empleado_DNI) VALUES (3, '12345678D');
-INSERT INTO Empleado_Trabaja_Sucursal (Sucursal_ID, Empleado_DNI) VALUES (4, '12345678G');
+INSERT INTO Empleado_Trabaja_Sucursal (Sucursal_ID, Empleado_DNI, Fecha) VALUES (1, '12345678B', '2014-10-18 13:17:17');
+INSERT INTO Empleado_Trabaja_Sucursal (Sucursal_ID, Empleado_DNI, Fecha) VALUES (2, '12345678C', '2021-12-31 13:14:17');
+INSERT INTO Empleado_Trabaja_Sucursal (Sucursal_ID, Empleado_DNI, Fecha) VALUES (3, '12345678A', '2020-12-31 13:14:17');
+INSERT INTO Empleado_Trabaja_Sucursal (Sucursal_ID, Empleado_DNI, Fecha) VALUES (4, '12345678H', '2019-12-31 13:14:17');
+INSERT INTO Empleado_Trabaja_Sucursal (Sucursal_ID, Empleado_DNI, Fecha) VALUES (5, '12345678E', '2018-12-31 13:14:17');
+INSERT INTO Empleado_Trabaja_Sucursal (Sucursal_ID, Empleado_DNI, Fecha) VALUES (6, '12345678F', '2017-12-31 13:14:17');
+INSERT INTO Empleado_Trabaja_Sucursal (Sucursal_ID, Empleado_DNI, Fecha) VALUES (7, '12345678I', '2016-12-31 13:14:17');
+INSERT INTO Empleado_Trabaja_Sucursal (Sucursal_ID, Empleado_DNI, Fecha) VALUES (3, '12345678D', '2015-12-31 13:14:17');
+INSERT INTO Empleado_Trabaja_Sucursal (Sucursal_ID, Empleado_DNI, Fecha) VALUES (4, '12345678G', '2014-12-31 13:14:17');
 
 
 -- -----------------------------------------------------
